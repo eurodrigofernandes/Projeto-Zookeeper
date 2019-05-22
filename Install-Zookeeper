@@ -1,0 +1,159 @@
+11- Configurar os hosts do Zookeeper e Adicionar usuário do Zookeeper
+
+      Antes de instalar os pacotes necessários do Zookeeper para configuração, vamos configurar o arquivo hosts em todos os nós do Ubuntu.
+      Depois disso, criaremos o usuário zookeeper em todos os três nós, já que o zookeeper daemon precisa ser executado como zookeeper o
+      próprio usuário.
+    
+      -Aqui utilizamos 3 máquinas Ubuntu 18.04.
+    
+        Zookeeper Node1 - 192.168.1.102 (hostname - node1)
+        Zookeeper Node2 - 192.168.1.103 (hostname - node2)
+        Zookeeper Node3 - 192.168.1.105 (hostname - node3)
+    
+      -Edite o /etc/hosts arquivo nos três nós por meio de gedit ou vim e faça as seguintes alterações:
+    
+        192.168.1.102 node1
+        192.168.1.103 node2
+        192.168.1.105 node3
+    
+      -Depois de modificar com os detalhes acima no arquivo de hosts, verifique a conectividade com o ping entre todos os nós.
+    
+      -Agora, crie o novo zookeeper usuário e grupo usando o comando:
+
+        # adduser zookeeper
+    
+22- Instalar e configurar o Oracle JDK.
+
+      -Faça o download e extraia o arquivo Java no /opt diretório. Para mais informações, consulte como instalar o java no Ubuntu 18.04.
+    
+      -Para configurar o JDK 1.8 Update 192 como a JVM padrão, usaremos os seguintes comandos:
+    
+        # update-alternatives -install / usr / bin / java java /opt/jdk1.8.0_192/bin/java 100
+        # update-alternatives -install / usr / bin / javac javac /opt/jdk1.8.0_192/bin/javac 100
+   
+      -Após a instalação para verificar se o java foi configurado com sucesso, execute os seguintes comandos:
+    
+        # update-alternatives - exibir java
+        # update-alternatives --visualizar javac
+    
+      -Para verificar a versão Java, execute os seguintes comandos:
+    
+        # java -version
+    
+      -Após a instalação bem sucedida, você receberá as informações abaixo:
+    
+        versão java "1.8.0_192"
+        Java (TM) SE Runtime Environment (compilação 1.8.0_192-b12)
+        Java HotSpot (TM) VM de servidor de 64 bits (compilação 25.192-b12, modo misto)
+    
+33- Configurar e Configurar o Zookeeper
+    
+      -Baixe e descompacte o pacote Zookeeper do arquivo oficial do Apache nas três máquinas Ubuntu, conforme mostrado abaixo:
+    
+        $ wget https://www-us.apache.org/dist/zookeeper/stable/apache-zookeeper-3.5.5.tar.gz
+    
+        $ tar -xzvf apache-zookeeper-3.5.5.tar.gz
+    
+      -Edite o bashrc para o usuário do zookeeper configurando as seguintes variáveis de ambiente do Zookeeper.
+      
+        exportar ZOO_LOG_DIR = / var / log / zookeeper
+      
+      -Crie o .bashrc na sessão de login atual:
+
+        $ source ~ / .bashrc
+        
+      -Agora, crie o diretório zookeeper sob a /var/lib pasta que servirá como diretório de dados do Zookeeper e crie outro
+       zookeeper diretório em /var/log que todos os registros do Zookeeper serão capturados. Tanto a propriedade do diretório 
+       precisa ser alterada como zookeeper.
+
+        $ sudo mkdir / var / lib / zookeeper; cd / var / lib; sudo chown zookeeper: zagueiro zagueiro
+        $ sudo mkdir / var / log / zookeeper; cd / var / log; sudo chown zookeeper: zagueiro zagueiro
+        
+      -Crie o id do servidor para o conjunto. Cada servidor zookeeper deve ter um número exclusivo no myid arquivo dentro do 
+       conjunto e deve ter um valor entre 1 e 255.
+        
+      -No node1
+      
+        $ sudo sh -c "echo '1'> / var / lib / zookeeper / myid"
+        
+      -No Node2
+      
+        $ sudo sh -c "echo '2'> / var / lib / zookeeper / myid"
+        
+      -No Node3
+      
+        $ sudo sh -c "echo '3'> / var / lib / zookeeper / myid"
+        
+      -Agora, vá para a pasta conf no diretório inicial do Zookeeper (local do diretório Zookeeper após o arquivo ter sido
+       descompactado / extraído).
+       
+        $ cd /home/zookeeper/zookeeper-3.4.13/conf/
+        
+          $ zookeeper@node1:~/zookeeper-3.4.13/conf$ ls -lrth
+          total 16K
+          -rw-r--r-- 1 zookeeper zookeeper  922 Jun 29 21:04 zoo_sample.cfg
+          -rw-r--r-- 1 zookeeper zookeeper  535 Jun 29 21:04 configuration.xsl
+          -rw-r--r-- 1 zookeeper zookeeper  999 Nov 24 18:29 zoo.cfg
+          -rw-r--r-- 1 zookeeper zookeeper 2.2K Nov 24 19:07 log4j.properties
+        
+      -Por padrão, um arquivo conf de amostra com nome zoo_sample.cfg estará presente no conf diretório. Você precisa fazer uma
+       cópia com o nome zoo.cfg mostrado abaixo e editar o novo, zoo.cfg conforme descrito nas três máquinas Ubuntu.
+       
+        $ cp zoo_sample.cfg zoo.cfg
+         
+          $ ls -lrth /home/zookeeper/zookeeper-3.4.13/conf
+          total 16K
+          -rw-r--r-- 1 zookeeper zookeeper  922 Jun 29 21:04 zoo_sample.cfg
+          -rw-r--r-- 1 zookeeper zookeeper  535 Jun 29 21:04 configuration.xsl
+          -rw-r--r-- 1 zookeeper zookeeper  999 Nov 24 18:29 zoo.cfg
+          -rw-r--r-- 1 zookeeper zookeeper 2.2K Nov 24 19:07 log4j.properties
+          
+        $ vim /home/zookeeper/zookeeper-3.4.13/conf/zoo.cfg
+        
+        dataDir=/var/lib/zookeeper
+        server.1=node1:2888:3888
+        server.2=node2:2888:3888
+        server.3=node3:2888:3888
+        
+      -Agora, faça as alterações abaixo no log4.properties arquivo da seguinte maneira.
+      
+        $ vim /home/zookeeper/zookeeper-3.4.13/conf/log4j.properties
+        
+        zookeeper.log.dir=/var/log/zookeeper
+        zookeeper.tracelog.dir=/var/log/zookeeper
+        log4j.rootLogger=INFO, CONSOLE, ROLLINGFILE
+        
+      -Após a configuração ter sido feita no zoo.cfg arquivo em todos os três nós, inicie o
+       zookeeper nos três nós, um por um, usando o seguinte comando:
+      
+        $ /home/zookeeper/zookeeper-3.4.13/bin/zkServer.sh start
+        
+      -O arquivo de log será criado no /var/log/zookeeper zookeeper chamado zookeeper.log, 
+       seguindo o arquivo para ver os logs em busca de erros.
+       
+        $ tail -f /var/log/zookeeper/zookeeper.log
+        
+  4- Verifique o Zookeeper Cluster e o Ensemble
+    
+      -No conjunto do Zookeeper de três servidores, um estará no modo líder e outros dois
+       estarão no modo seguidor. Você pode verificar o status executando os seguintes comandos.
+       
+        $ /home/zookeeper/zookeeper-3.4.13/bin/zkServer.sh status
+        
+        $ echo stat | nc node1 2181
+        
+        $ echo mntr | nc node1 2181
+        
+        $ echo srvr | nc localhost 2181
+        
+      -Se precisar verificar e ver o znode, você pode se conectar usando o comando abaixo em qualquer nó do zookeeper:
+      
+        $ /home/zookeeper/zookeeper-3.4.13/bin/zkCli.sh -server `hostname -f`: 2181
+        
+      
+     
+     
+    
+    
+
+    
